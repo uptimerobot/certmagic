@@ -1,4 +1,4 @@
-module github.com/caddyserver/certmagic
+module github.com/uptimerobot/certmagic
 
 go 1.14
 
