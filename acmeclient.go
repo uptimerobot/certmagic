@@ -419,7 +419,7 @@ var (
 
 	// RateLimitEventsWindow is the size of the sliding
 	// window that throttles events.
-	limitWindow, err = time.ParseDuration(getenv("RATE_LIMIT_EVENTS_WINDOW", "1m"))
+	limitWindow, _ = time.ParseDuration(getenv("RATE_LIMIT_EVENTS_WINDOW", "1m"))
 	RateLimitEventsWindow = limitWindow * time.Minute
 )
 
