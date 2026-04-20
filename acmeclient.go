@@ -408,7 +408,7 @@ var (
 
 	// RateLimitEvents is how many new events can be allowed
 	// in RateLimitEventsWindow.
-	rateLimit, error = strconv.Atoi(getenv("RATE_LIMIT_EVENTS", "10"))
+	rateLimit, _ = strconv.Atoi(getenv("RATE_LIMIT_EVENTS", "10"))
 	RateLimitEvents = rateLimit
 
 	// RateLimitEventsWindow is the size of the sliding
