@@ -26,12 +26,21 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"os"
 
 	"github.com/mholt/acmez/v3"
 	"github.com/mholt/acmez/v3/acme"
 	"go.uber.org/zap"
 	"go.uber.org/zap/exp/zapslog"
 )
+
+func getenv(key, fallback string) string {
+    value := os.Getenv(key)
+    if len(value) == 0 {
+        return fallback
+    }
+    return value
+}
 
 // acmeClient holds state necessary to perform ACME operations
 // for certificate management with an ACME account. Call
@@ -314,6 +323,8 @@ func (c *acmeClient) throttle(ctx context.Context, names []string) error {
 	rateLimitersMu.Lock()
 	rl, ok := rateLimiters[rateLimiterKey]
 	if !ok {
+		fmt.Println("Rate limit set to %v", RateLimitEvents)
+		fmt.Println("Rate limit window set to %v", RateLimitEventsWindow)
 		rl = NewRateLimiter(RateLimitEvents, RateLimitEventsWindow)
 		rateLimiters[rateLimiterKey] = rl
 		// TODO: stop rate limiter when it is garbage-collected...
@@ -397,11 +408,13 @@ var (
 
 	// RateLimitEvents is how many new events can be allowed
 	// in RateLimitEventsWindow.
-	RateLimitEvents = 10
+	rateLimit, error = strconv.Atoi(getenv("RATE_LIMIT_EVENTS", "10"))
+	RateLimitEvents = rateLimit
 
 	// RateLimitEventsWindow is the size of the sliding
 	// window that throttles events.
-	RateLimitEventsWindow = 10 * time.Second
+	limitWindow, err = time.ParseDuration(getenv("RATE_LIMIT_EVENTS_WINDOW", "1m"))
+	RateLimitEventsWindow = limitWindow * time.Minute
 )
 
 // Some default values passed down to the underlying ACME client.
