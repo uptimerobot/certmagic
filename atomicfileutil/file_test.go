@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/uptimerobot/certmagic/internal/atomicfile"
+	"github.com/uptimerobot/certmagic/atomicfileutil"
 	"github.com/uptimerobot/certmagic/internal/testutil"
 )
 
