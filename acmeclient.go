@@ -34,14 +34,6 @@ import (
 	"go.uber.org/zap/exp/zapslog"
 )
 
-func getenv(key, fallback string) string {
-	value := os.Getenv(key)
-	if len(value) == 0 {
-		return fallback
-	}
-	return value
-}
-
 // acmeClient holds state necessary to perform ACME operations
 // for certificate management with an ACME account. Call
 // ACMEIssuer.newACMEClientWithAccount() to get a valid one.
@@ -331,6 +323,11 @@ func (c *acmeClient) throttle(ctx context.Context, names []string) error {
 	if !ok {
 		rl = NewRateLimiter(RateLimitEvents, RateLimitEventsWindow)
 		rateLimiters[rateLimiterKey] = rl
+		c.iss.Logger.Info("initialized internal rate limiter",
+			zap.Int("events", RateLimitEvents),
+			zap.Duration("window", RateLimitEventsWindow),
+			zap.String("ca", c.acmeClient.Directory),
+		)
 		// TODO: stop rate limiter when it is garbage-collected...
 	}
 	rateLimitersMu.Unlock()
@@ -412,14 +409,48 @@ var (
 
 	// RateLimitEvents is how many new events can be allowed
 	// in RateLimitEventsWindow.
-	rateLimit, _    = strconv.Atoi(getenv("RATE_LIMIT_EVENTS", "10"))
-	RateLimitEvents = rateLimit
+	RateLimitEvents = rateLimitEventsFromEnv("RATE_LIMIT_EVENTS", defaultRateLimitEvents)
 
 	// RateLimitEventsWindow is the size of the sliding
 	// window that throttles events.
-	limitWindow, _        = time.ParseDuration(getenv("RATE_LIMIT_EVENTS_WINDOW", "1m"))
-	RateLimitEventsWindow = limitWindow
+	RateLimitEventsWindow = rateLimitWindowFromEnv("RATE_LIMIT_EVENTS_WINDOW", defaultRateLimitEventsWindow)
 )
+
+const (
+	defaultRateLimitEvents       = 60
+	defaultRateLimitEventsWindow = 1 * time.Minute
+
+	maxRateLimitEvents = 10000
+	minRateLimitWindow = time.Second
+)
+
+func rateLimitEventsFromEnv(key string, fallback int) int {
+	raw := strings.TrimSpace(os.Getenv(key))
+	if raw == "" {
+		return fallback
+	}
+	n, err := strconv.Atoi(raw)
+	if err != nil || n <= 0 || n > maxRateLimitEvents {
+		slog.Warn("ignoring invalid rate limit setting",
+			"key", key, "value", raw, "using", fallback)
+		return fallback
+	}
+	return n
+}
+
+func rateLimitWindowFromEnv(key string, fallback time.Duration) time.Duration {
+	raw := strings.TrimSpace(os.Getenv(key))
+	if raw == "" {
+		return fallback
+	}
+	d, err := time.ParseDuration(raw)
+	if err != nil || d < minRateLimitWindow {
+		slog.Warn("ignoring invalid rate limit setting",
+			"key", key, "value", raw, "using", fallback)
+		return fallback
+	}
+	return d
+}
 
 // Some default values passed down to the underlying ACME client.
 var (

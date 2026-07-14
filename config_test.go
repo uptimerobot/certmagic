@@ -23,8 +23,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/uptimerobot/certmagic/internal/testutil"
 	"github.com/mholt/acmez/v3/acme"
+	"github.com/uptimerobot/certmagic/internal/testutil"
 )
 
 func TestSaveCertResource(t *testing.T) {
