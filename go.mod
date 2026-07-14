@@ -2,6 +2,13 @@ module github.com/uptimerobot/certmagic
 
 go 1.25.0
 
+// Self-replace so filestorage.go's github.com/caddyserver/certmagic/atomicfileutil
+// import (kept under the original upstream path, not renamed) resolves when this
+// module is built standalone. Only honored when this go.mod is the main module --
+// ignored by consumers, e.g. Caddy's own replace of github.com/caddyserver/certmagic
+// onto this fork -- so it doesn't conflict with that consumption path.
+replace github.com/caddyserver/certmagic => ./
+
 require (
 	github.com/caddyserver/zerossl v0.1.5
 	github.com/klauspost/cpuid/v2 v2.3.0
@@ -16,6 +23,7 @@ require (
 )
 
 require (
+	github.com/caddyserver/certmagic v0.25.3 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/mod v0.35.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
