@@ -22,11 +22,11 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"os"
 
 	"github.com/mholt/acmez/v3"
 	"github.com/mholt/acmez/v3/acme"
@@ -35,11 +35,11 @@ import (
 )
 
 func getenv(key, fallback string) string {
-    value := os.Getenv(key)
-    if len(value) == 0 {
-        return fallback
-    }
-    return value
+	value := os.Getenv(key)
+	if len(value) == 0 {
+		return fallback
+	}
+	return value
 }
 
 // acmeClient holds state necessary to perform ACME operations
@@ -329,8 +329,6 @@ func (c *acmeClient) throttle(ctx context.Context, names []string) error {
 	rateLimitersMu.Lock()
 	rl, ok := rateLimiters[rateLimiterKey]
 	if !ok {
-		fmt.Println("Rate limit set to %v", RateLimitEvents)
-		fmt.Println("Rate limit window set to %v", RateLimitEventsWindow)
 		rl = NewRateLimiter(RateLimitEvents, RateLimitEventsWindow)
 		rateLimiters[rateLimiterKey] = rl
 		// TODO: stop rate limiter when it is garbage-collected...
@@ -414,13 +412,13 @@ var (
 
 	// RateLimitEvents is how many new events can be allowed
 	// in RateLimitEventsWindow.
-	rateLimit, _ = strconv.Atoi(getenv("RATE_LIMIT_EVENTS", "10"))
+	rateLimit, _    = strconv.Atoi(getenv("RATE_LIMIT_EVENTS", "10"))
 	RateLimitEvents = rateLimit
 
 	// RateLimitEventsWindow is the size of the sliding
 	// window that throttles events.
-	limitWindow, _ = time.ParseDuration(getenv("RATE_LIMIT_EVENTS_WINDOW", "1m"))
-	RateLimitEventsWindow = limitWindow * time.Minute
+	limitWindow, _        = time.ParseDuration(getenv("RATE_LIMIT_EVENTS_WINDOW", "1m"))
+	RateLimitEventsWindow = limitWindow
 )
 
 // Some default values passed down to the underlying ACME client.
